@@ -1,0 +1,2 @@
+# NeteaseSongRec_Linux
+Based on Netease Chromium Plugin.基于网易云音乐听歌识曲Chrom插件的Linux版网易云听歌识曲
