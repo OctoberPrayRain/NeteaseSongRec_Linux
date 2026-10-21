@@ -5,6 +5,9 @@
 
 本项目与网易云音乐官方无隶属、合作或背书关系。
 
+<img width="806" height="697" alt="image" src="https://github.com/user-attachments/assets/acc213ed-8277-425a-aa98-768546255efd" />
+
+
 ## 快速上手
 
 预编译客户端面向 **Arch Linux x86_64** 桌面环境。首次使用需要联网下载网易云识曲资源，识别歌曲时也需要联网。
