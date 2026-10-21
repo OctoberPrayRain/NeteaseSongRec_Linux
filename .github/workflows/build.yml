@@ -38,14 +38,17 @@ jobs:
           cargo build --release --locked
           node --check assets/netease/fingerprint_bridge.js
           python scripts/sync-netease-resources.py --help
-      - name: Package client, corresponding sources and AUR metadata
+      - name: Package client and corresponding sources
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           python scripts/package-release.py
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: netease-songrec-linux-x86_64
-          path: dist/*
+          path: |
+            dist/*-linux-x86_64.tar.gz
+            dist/*-source.tar.gz
+            dist/SHA256SUMS
           if-no-files-found: error
 
   publish:

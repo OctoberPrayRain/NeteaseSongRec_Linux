@@ -169,7 +169,6 @@ fn main() -> Result<(), slint::PlatformError> {
                     window.set_status_text("没有听到音乐，请确认正在播放或切换声音来源。".into());
                 }
                 AudioCaptureEvent::RecordingStarted(_) | AudioCaptureEvent::NoAudioDetected(_) => {}
-                AudioCaptureEvent::VolumePercent(_) => {}
             }
         }
 

@@ -22,7 +22,6 @@ pub enum AudioCaptureEvent {
     AudioError(String),
     RecordingStarted(u64),
     NoAudioDetected(u64),
-    VolumePercent(f32),
 }
 use tokio_util::sync::CancellationToken;
 

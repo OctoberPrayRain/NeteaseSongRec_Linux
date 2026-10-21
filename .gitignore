@@ -1,8 +1,11 @@
 /target/
 /CHANGELOG.md
 /dist/
+/packaging/aur/
 *.log
 *.pkg.tar.*
+__pycache__/
+*.pyc
 
 # Original NetEase files and generated runtime copies.
 /vendor/netease-extension/

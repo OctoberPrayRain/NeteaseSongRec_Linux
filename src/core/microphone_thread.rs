@@ -29,7 +29,6 @@ struct ProcessingState<'a> {
     sample_rate: u32,
     audio_segment_buffer: &'a mut [f32; OUTPUT_SAMPLE_RATE * BUFFER_SIZE_SECS],
     number_unprocessed_samples: &'a mut usize,
-    number_unmeasured_samples: &'a mut usize,
     audio_signal_detected: &'a mut bool,
     processing_already_ongoing: &'a AtomicBool,
     session: &'a RecognitionSession,
@@ -190,7 +189,6 @@ pub fn microphone_thread(
                     let mut audio_segment_buffer =
                         Box::new([0.0f32; OUTPUT_SAMPLE_RATE * BUFFER_SIZE_SECS]);
                     let mut number_unprocessed_samples: usize = 0;
-                    let mut number_unmeasured_samples: usize = 0;
                     let mut audio_signal_detected = false;
 
                     let processing_already_ongoing_2 = processing_already_ongoing.clone();
@@ -213,7 +211,6 @@ pub fn microphone_thread(
                                             sample_rate,
                                             audio_segment_buffer: &mut audio_segment_buffer,
                                             number_unprocessed_samples: &mut number_unprocessed_samples,
-                                            number_unmeasured_samples: &mut number_unmeasured_samples,
                                             audio_signal_detected: &mut audio_signal_detected,
                                             processing_already_ongoing: &processing_already_ongoing_2,
                                             session: &session,
@@ -261,7 +258,6 @@ pub fn microphone_thread(
                                                 sample_rate,
                                                 audio_segment_buffer: &mut audio_segment_buffer,
                                                 number_unprocessed_samples: &mut number_unprocessed_samples,
-                                                number_unmeasured_samples: &mut number_unmeasured_samples,
                                                 audio_signal_detected: &mut audio_signal_detected,
                                                 processing_already_ongoing: &processing_already_ongoing_2,
                                                 session: &session,
@@ -441,32 +437,5 @@ fn write_data(state: ProcessingState) {
         }
 
         *state.number_unprocessed_samples = 0;
-    }
-
-    // Do microphone volume measurement every 24th of second (so that we can
-    // update it at 24 FPS) and over the last two 100th of second (so that we
-    // can be sure to measure volume for at most 100 Hz)
-
-    *state.number_unmeasured_samples += raw_pcm_samples.len();
-
-    if *state.number_unmeasured_samples >= OUTPUT_SAMPLE_RATE / 24 {
-        let mut max_f32_amplitude = 0.0f32;
-
-        for item in audio_segment_buffer
-            .iter()
-            .take(OUTPUT_SAMPLE_RATE * BUFFER_SIZE_SECS)
-            .skip(OUTPUT_SAMPLE_RATE * BUFFER_SIZE_SECS - OUTPUT_SAMPLE_RATE / 100 * 2)
-        {
-            if item.abs() > max_f32_amplitude {
-                max_f32_amplitude = item.abs();
-            }
-        }
-
-        state
-            .event_tx
-            .try_send(AudioCaptureEvent::VolumePercent(max_f32_amplitude * 100.0))
-            .unwrap();
-
-        *state.number_unmeasured_samples = 0;
     }
 }

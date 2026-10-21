@@ -83,7 +83,7 @@ def main():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(args.cache_dir / name, destination)
         print(f"  {name} -> {destination.resolve()}")
-    print(f"NetEase {VERSION} resources are ready. Original files and synced copies must remain outside Git/release archives.")
+    print(f"NetEase {VERSION} resources are ready.")
 
 
 if __name__ == "__main__":
