@@ -5,7 +5,7 @@
 
 本项目与网易云音乐官方无隶属、合作或背书关系。
 
-<img width="806" height="697" alt="image" src="https://github.com/user-attachments/assets/acc213ed-8277-425a-aa98-768546255efd" />
+<h1 align = center><img width="806" height="697" alt="image" src="https://github.com/user-attachments/assets/acc213ed-8277-425a-aa98-768546255efd" /></h1>
 
 
 ## 快速上手
