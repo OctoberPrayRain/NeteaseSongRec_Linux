@@ -1,0 +1,11 @@
+/target/
+/CHANGELOG.md
+/dist/
+*.log
+*.pkg.tar.*
+
+# Original NetEase files and generated runtime copies.
+/vendor/netease-extension/
+/assets/netease/afp.wasm
+/assets/netease/sandbox.bundle.js
+/assets/ui/recognition-128.png

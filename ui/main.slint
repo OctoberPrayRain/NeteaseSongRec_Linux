@@ -1,0 +1,396 @@
+import { TextEdit } from "std-widgets.slint";
+
+component CloudButton inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary: false;
+    in property <bool> enabled: true;
+    callback clicked();
+
+    height: root.primary ? 46px : 30px;
+    vertical-stretch: 0;
+    border-radius: root.primary ? 23px : 15px;
+    background: !root.enabled ? #ececee : root.primary ? (touch.pressed ? #c70c22 : touch.has-hover ? #e51c35 : #ec293f) : (touch.has-hover ? #ffe9ec : #fff3f4);
+    border-width: focus.has-focus ? 2px : 0px;
+    border-color: #f79ba5;
+    accessible-role: button;
+    accessible-label: root.text;
+    accessible-enabled: root.enabled;
+    accessible-action-default => { if root.enabled { root.clicked(); } }
+    forward-focus: focus;
+
+    Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        font-size: root.primary ? 15px : 12px;
+        font-weight: 600;
+        color: !root.enabled ? #a5a5ad : root.primary ? #ffffff : #d8233b;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    focus := FocusScope {
+        enabled: root.enabled;
+        key-pressed(event) => {
+            if event.text == " " || event.text == "\n" {
+                root.clicked();
+                return accept;
+            }
+            return reject;
+        }
+    }
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => { focus.focus(); root.clicked(); }
+    }
+}
+
+component ListeningRings inherits Rectangle {
+    private property <float> progress: 0;
+
+    init => { root.progress = 1; }
+    animate progress {
+        duration: 1800ms;
+        iteration-count: -1;
+        easing: linear;
+    }
+
+    for offset in [0.0, 0.5]: Rectangle {
+        private property <float> phase: Math.mod(root.progress + offset, 1.0);
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        width: 80px + self.phase * 52px;
+        height: self.width;
+        border-radius: self.width / 2;
+        border-width: 1.5px;
+        border-color: #ee5266;
+        background: #ffe8ec;
+        opacity: (1 - self.phase) * 0.65;
+    }
+}
+
+export component MainWindow inherits Window {
+    title: "网易云听歌识曲";
+    icon: root.recognition-icon;
+    in-out property <image> recognition-icon: @image-url("../assets/ui/recognition-fallback.svg");
+    background: #f6f6f8;
+    default-font-family: "Noto Sans CJK SC";
+    default-font-size: 13px;
+    preferred-width: 480px;
+    preferred-height: 660px;
+    min-width: 440px;
+    min-height: 640px;
+
+    in-out property <[string]> devices;
+    in-out property <string> status-text: "正在查找音频设备…";
+    in-out property <string> song-title: "";
+    in-out property <string> song-detail: "";
+    in-out property <bool> is-recording: false;
+    in-out property <bool> has-selection: false;
+    in-out property <int> selected-device-index: -1;
+    private property <bool> has-result: root.song-title != "" && root.song-title != "没有匹配结果";
+    private property <bool> copy-confirmed: false;
+
+    callback device-selected(int);
+    callback toggle-recording();
+
+    Rectangle {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: 76px;
+        background: #252527;
+        Image {
+            x: 24px;
+            y: 20px;
+            width: 34px;
+            height: 34px;
+            source: root.recognition-icon;
+            image-fit: contain;
+        }
+        Text {
+            x: 70px;
+            y: 18px;
+            text: "网易云音乐";
+            font-size: 19px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        Text {
+            x: 71px;
+            y: 45px;
+            text: "听 歌 识 曲";
+            font-size: 10px;
+            color: #b4b4bb;
+        }
+        Rectangle {
+            x: parent.width - 90px;
+            y: 26px;
+            width: 66px;
+            height: 24px;
+            border-radius: 12px;
+            background: #37373a;
+            Text {
+                width: parent.width;
+                height: parent.height;
+                text: "听见好音乐";
+                font-size: 10px;
+                color: #dddddf;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+        Rectangle { y: parent.height - 3px; height: 3px; background: #e51c35; }
+    }
+
+    VerticalLayout {
+        x: (parent.width - self.width) / 2;
+        y: 76px + (parent.height - 76px - self.height) / 2;
+        width: min(parent.width, 528px);
+        height: min(parent.height - 76px, 584px);
+        padding: 24px;
+        padding-top: 22px;
+        padding-bottom: 18px;
+        spacing: 18px;
+
+        Rectangle {
+            height: 224px;
+            vertical-stretch: 0;
+            Rectangle {
+                x: (parent.width - self.width) / 2;
+                y: 0px;
+                width: 108px;
+                height: 108px;
+                border-radius: 54px;
+                border-width: 1px;
+                border-color: root.is-recording ? #f8b8c1 : #f0dde0;
+                background: root.is-recording ? #ffedf0 : #fbeff1;
+                if root.is-recording: ListeningRings {
+                    x: 0px;
+                    y: 0px;
+                    width: parent.width;
+                    height: parent.height;
+                }
+                Rectangle {
+                    x: 9px;
+                    y: 9px;
+                    width: 90px;
+                    height: 90px;
+                    border-radius: 45px;
+                    border-width: 1px;
+                    border-color: #f6d3d9;
+                    background: #fff7f8;
+                }
+                Image {
+                    x: 18px;
+                    y: 18px;
+                    width: 72px;
+                    height: 72px;
+                    source: root.recognition-icon;
+                    image-fit: contain;
+                }
+            }
+            Text {
+                y: 119px;
+                width: parent.width;
+                height: 28px;
+                text: root.is-recording ? "正在听歌识曲..." : root.has-result ? "已找到对应歌曲" : "听见喜欢，马上识别";
+                font-size: 21px;
+                font-weight: 600;
+                color: #242429;
+                horizontal-alignment: center;
+            }
+            Text {
+                y: 153px;
+                width: parent.width;
+                height: 18px;
+                text: root.is-recording ? "保持音乐播放，找到歌曲后会自动停止" : "从电脑正在播放的声音中识别歌曲";
+                font-size: 12px;
+                color: #919199;
+                horizontal-alignment: center;
+            }
+            CloudButton {
+                y: 185px;
+                height: 42px;
+                width: parent.width;
+                primary: true;
+                text: root.is-recording ? "停止识别" : root.has-result ? "再识别一首" : "开始识别";
+                enabled: root.has-selection || root.is-recording;
+                clicked => { root.copy-confirmed = false; root.toggle-recording(); }
+            }
+        }
+
+        Rectangle {
+            height: 164px;
+            vertical-stretch: 0;
+            background: #ffffff;
+            border-color: #e9e9ed;
+            border-width: 1px;
+            border-radius: 12px;
+
+            Rectangle { x: 18px; y: 22px; width: 3px; height: 14px; border-radius: 1.5px; background: #e82740; }
+            Text { x: 28px; y: 19px; text: "识别结果"; font-size: 14px; font-weight: 600; color: #303036; }
+            CloudButton {
+                x: parent.width - self.width - 16px;
+                y: 14px;
+                width: 86px;
+                text: root.copy-confirmed ? "已复制 ✓" : "复制结果";
+                visible: root.has-result;
+                clicked => {
+                    copy-source.select-all();
+                    copy-source.copy();
+                    root.copy-confirmed = true;
+                }
+            }
+            Rectangle {
+                x: 18px;
+                y: 68px;
+                width: 44px;
+                height: 44px;
+                border-radius: 22px;
+                background: root.has-result ? #303036 : #ececf0;
+                Rectangle {
+                    x: 6px; y: 6px; width: 32px; height: 32px;
+                    border-radius: 16px; border-width: 1px;
+                    border-color: root.has-result ? #4a4a50 : #dedee5;
+                    background: root.has-result ? #38383f : #f2f2f5;
+                    Rectangle {
+                        x: 9px; y: 9px; width: 14px; height: 14px; border-radius: 7px;
+                        background: root.has-result ? #eb2940 : #cdcdd6;
+                        Rectangle { x: 5px; y: 5px; width: 4px; height: 4px; border-radius: 2px; background: #ffffff; }
+                    }
+                }
+            }
+            VerticalLayout {
+                x: 76px;
+                y: 62px;
+                width: parent.width - 96px;
+                height: 86px;
+                alignment: start;
+                spacing: 7px;
+                Text {
+                    text: root.has-result ? root.song-title : root.is-recording ? "正在寻找这首歌…" : "等待音乐响起";
+                    color: root.has-result ? #29292f : #777780;
+                    font-size: root.has-result ? 18px : 16px;
+                    font-weight: root.has-result ? 600 : 400;
+                    wrap: word-wrap;
+                    overflow: elide;
+                    max-height: 52px;
+                    vertical-stretch: 0;
+                }
+                Text {
+                    text: root.has-result ? root.song-detail : root.is-recording ? (root.song-title == "没有匹配结果" ? "暂时没有匹配，继续聆听中" : "正在识别系统播放的音乐") : (root.status-text == "" ? "播放音乐后，点击开始识别" : root.status-text);
+                    color: #919199;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                    overflow: elide;
+                    max-height: 36px;
+                    vertical-stretch: 0;
+                }
+            }
+        }
+
+        Rectangle {
+            height: 74px;
+            vertical-stretch: 0;
+            Text { x: 0px; y: 0px; text: "声音来源"; font-size: 12px; font-weight: 600; color: #666670; }
+            Text {
+                x: parent.width - self.width;
+                y: 0px;
+                text: root.is-recording ? "识别时暂不可切换" : "没有声音？试试切换设备";
+                font-size: 11px;
+                color: #9a9aa3;
+            }
+            source-picker := Rectangle {
+                y: 27px;
+                height: 42px;
+                width: parent.width;
+                border-radius: 8px;
+                background: root.is-recording ? #efeff2 : #ffffff;
+                border-width: 1px;
+                border-color: source-touch.has-hover && !root.is-recording ? #c5c5cf : #e0e0e6;
+                accessible-role: combobox;
+                accessible-label: "声音来源";
+                accessible-value: source-label.text;
+                forward-focus: source-focus;
+                source-label := Text {
+                    x: 14px;
+                    width: parent.width - 48px;
+                    height: parent.height;
+                    text: root.selected-device-index >= 0 ? root.devices[root.selected-device-index] : "请选择音频设备";
+                    color: root.is-recording ? #9797a0 : #55555f;
+                    font-size: 12px;
+                    overflow: elide;
+                    vertical-alignment: center;
+                }
+                Text { x: parent.width - 30px; height: parent.height; text: "⌄"; font-size: 17px; color: #8f8f99; vertical-alignment: center; }
+                source-focus := FocusScope {
+                    enabled: !root.is-recording;
+                    key-pressed(event) => {
+                        if event.text == " " || event.text == "\n" || event.text == Key.DownArrow {
+                            source-popup.show();
+                            return accept;
+                        }
+                        return reject;
+                    }
+                }
+                source-touch := TouchArea {
+                    enabled: !root.is-recording;
+                    mouse-cursor: pointer;
+                    clicked => { source-focus.focus(); source-popup.show(); }
+                }
+                source-popup := PopupWindow {
+                    y: source-picker.height + 5px;
+                    width: source-picker.width;
+                    height: min(220px, root.devices.length * 42px + 8px);
+                    Rectangle {
+                        border-radius: 8px;
+                        border-width: 1px;
+                        border-color: #e1e1e7;
+                        background: #ffffff;
+                        clip: true;
+                        Flickable {
+                            x: 4px; y: 4px; width: parent.width - 8px; height: parent.height - 8px;
+                            viewport-height: root.devices.length * 42px;
+                            for device[index] in root.devices: Rectangle {
+                                y: index * 42px;
+                                height: 42px;
+                                width: parent.width;
+                                border-radius: 4px;
+                                background: index == root.selected-device-index ? #fff0f2 : option-touch.has-hover ? #f6f6f8 : #ffffff;
+                                Text {
+                                    x: 10px; width: parent.width - 20px; height: parent.height;
+                                    text: device; font-size: 12px;
+                                    color: index == root.selected-device-index ? #dd233b : #55555f;
+                                    overflow: elide; vertical-alignment: center;
+                                }
+                                option-touch := TouchArea {
+                                    mouse-cursor: pointer;
+                                    clicked => { root.device-selected(index); source-popup.close(); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Rectangle { vertical-stretch: 1; }
+    }
+
+    // Only supplies Slint's native clipboard API; the result stays ordinary text.
+    copy-source := TextEdit {
+        x: 0px;
+        y: 0px;
+        width: 0px;
+        height: 0px;
+        visible: false;
+        text: root.song-title + "\n" + root.song-detail;
+        read-only: true;
+    }
+    Timer {
+        interval: 1600ms;
+        running: root.copy-confirmed;
+        triggered => { root.copy-confirmed = false; }
+    }
+}

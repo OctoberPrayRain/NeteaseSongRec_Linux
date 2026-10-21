@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=NetEase SongRec
+Name[zh_CN]=网易云听歌识曲
+Comment=Recognize music playing on your computer
+Comment[zh_CN]=识别电脑正在播放的音乐
+Exec=netease-songrec-linux
+Icon=netease-songrec-linux
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=music;song;recognition;netease;
+StartupNotify=true
